@@ -1,11 +1,11 @@
 ---
 date_created: 2025-11-04
 date_modified: 2025-11-04
-version: 1.0.0
+version: 1.0.1
 ---
-# `existing-project.zsh` スクリプト解説ドキュメント
+# `existing-project-type.zsh` スクリプト解説ドキュメント
 
-このドキュメントは、既存プロジェクト用スクリプト `existing-project.zsh` の役割と処理の流れを整理したものです。
+このドキュメントは、既存プロジェクト用スクリプト `existing-project-type.zsh` の役割と処理の流れを整理したものです。
 
 目的は「**既存ディレクトリ（既にあるプロジェクト）を git worktree + spec-kit 構造へ安全に移行する**」ことです。
 
@@ -21,7 +21,7 @@ version: 1.0.0
 最終的なディレクトリツリーは、新規プロジェクト版と同じ構造になります。
 
 ```text
-project-root/   # ここで existing-project.zsh を実行
+project-root/   # ここで existing-project-type.zsh を実行
   .git/
   .gitignore
   worktrees/
@@ -43,8 +43,8 @@ project-root/   # ここで existing-project.zsh を実行
 
 ```zsh
 main() {
-    set -euo pipefail
-    # 本処理…
+  set -euo pipefail
+  # 本処理…
 }
 
 ( main ) || true
@@ -74,29 +74,29 @@ readonly SPEC_KIT_SOURCE="git+https://github.com/github/spec-kit.git"
 
 ```zsh
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    # Not a git repository yet: initialize and capture the current project state
-    git init -b "${TARGET_BRANCH}"
+  # Not a git repository yet: initialize and capture the current project state
+  git init -b "${TARGET_BRANCH}"
 
-    # Ensure there is at least an empty .gitignore so the final hub structure matches expectations
-    if [ ! -f .gitignore ]; then
-        touch .gitignore
-    fi
+  # Ensure there is at least an empty .gitignore so the final hub structure matches expectations
+  if [ ! -f .gitignore ]; then
+    touch .gitignore
+  fi
 
-    git add .
-    git commit -m "chore: init repository before introducing git worktree"
+  git add .
+  git commit -m "chore: init repository before introducing git worktree"
 else
-    # Already inside a git repository: record a snapshot before restructuring
-    git add .
-    git commit -m "chore: before introducing git worktree" || echo "no changes to commit"
+  # Already inside a git repository: record a snapshot before restructuring
+  git add .
+  git commit -m "chore: before introducing git worktree" || echo "no changes to commit"
 
-    # Ensure the target branch exists; prefer origin/${TARGET_BRANCH} when available
-    if ! git show-ref --verify --quiet "refs/heads/${TARGET_BRANCH}"; then
-        if git show-ref --verify --quiet "refs/remotes/origin/${TARGET_BRANCH}"; then
-            git branch "${TARGET_BRANCH}" "origin/${TARGET_BRANCH}"
-        else
-            git branch "${TARGET_BRANCH}"
-        fi
+  # Ensure the target branch exists; prefer origin/${TARGET_BRANCH} when available
+  if ! git show-ref --verify --quiet "refs/heads/${TARGET_BRANCH}"; then
+    if git show-ref --verify --quiet "refs/remotes/origin/${TARGET_BRANCH}"; then
+      git branch "${TARGET_BRANCH}" "origin/${TARGET_BRANCH}"
+    else
+      git branch "${TARGET_BRANCH}"
     fi
+  fi
 fi
 ```
 
@@ -135,11 +135,11 @@ git worktree add "${WORKTREE_PATH}" "${TARGET_BRANCH}"
 
 ```zsh
 find . -mindepth 1 -maxdepth 1 \
-    ! -name '.git' \
-    ! -name '.gitignore' \
-    ! -name "${WORKTREE_ROOT}" \
-    ! -name 'README.hub.md' \
-    -exec rm -rf {} +
+  ! -name '.git' \
+  ! -name '.gitignore' \
+  ! -name "${WORKTREE_ROOT}" \
+  ! -name 'README.hub.md' \
+  -exec rm -rf {} +
 ```
 
 - ルート直下の
@@ -164,11 +164,17 @@ find . -mindepth 1 -maxdepth 1 \
 cd "${WORKTREE_PATH}"
 uv tool install specify-cli --from "${SPEC_KIT_SOURCE}" --force
 yes | specify init . --ai codex
+git add . && \
+git commit -m "setup: git worktree & spec-kit" && \
+git push origin main
 ```
 
-- `cd worktrees/main` で main ワークツリーに移動。
-- `uv tool install` で specify CLI を最新の spec-kit リポジトリから取得。
-- `yes | specify init . --ai codex` で spec-kit テンプレートを一括初期化。
+- `cd worktrees/main` で main ワークツリーに移動。  
+- `uv tool install` で specify CLI を最新の spec-kit リポジトリから取得。  
+- `yes | specify init . --ai codex` で spec-kit テンプレートを一括初期化。  
+- `git add .` で `worktrees/main` 配下の変更をすべてステージする。  
+- `git commit -m "setup: git worktree & spec-kit"` で spec-kit 導入状態を 1 コミットとして記録する。  
+- `git push origin main` でローカルの状態をリモート main ブランチに反映する。  
 
 これにより `worktrees/main` には
 
@@ -176,31 +182,33 @@ yes | specify init . --ai codex
 - `.specify/`
 - 各種 spec / 設定ファイル
 
-が自動生成される。
+が自動生成され、その構造がリモート main ブランチにも反映されます。
+
+このコミット＆プッシュにより、spec-kit 導入後の構造についてもローカルとリモートの状態が揃います。
 
 ## 対話シェル起動ロジック
 
-`existing-project.zsh` でも、新規版と同じ対話シェル制御ロジックを採用している。
+`existing-project-type.zsh` でも、新規版と同じ対話シェル制御ロジックを採用している。
 
 ```zsh
 shell_mode="${NEW_PROJECT_TYPE_SHELL_MODE:-child}"  # child|exec|none
 
 if [ "${NEW_PROJECT_TYPE_NO_SHELL:-0}" != "1" ] && [ "$shell_mode" != "none" ]; then
-    if [ -t 0 ] && [ -t 1 ]; then
-        if [ "$shell_mode" = "exec" ]; then
-            exec "${SHELL:-/bin/zsh}" -il
-        else
-            "${SHELL:-/bin/zsh}" -il || true
-        fi
-    elif [ -e /dev/tty ]; then
-        if [ "$shell_mode" = "exec" ]; then
-            exec "${SHELL:-/bin/zsh}" -il </dev/tty >/dev/tty 2>/dev/tty
-        else
-            "${SHELL:-/bin/zsh}" -il </dev/tty >/dev/tty 2>/dev/tty || true
-        fi
+  if [ -t 0 ] && [ -t 1 ]; then
+    if [ "$shell_mode" = "exec" ]; then
+      exec "${SHELL:-/bin/zsh}" -il
     else
-        echo "TTYが検出できないため対話シェルをスキップします。" >&2
+      "${SHELL:-/bin/zsh}" -il || true
     fi
+  elif [ -e /dev/tty ]; then
+    if [ "$shell_mode" = "exec" ]; then
+      exec "${SHELL:-/bin/zsh}" -il </dev/tty >/dev/tty 2>/dev/tty
+    else
+      "${SHELL:-/bin/zsh}" -il </dev/tty >/dev/tty 2>/dev/tty || true
+    fi
+  else
+    echo "TTYが検出できないため対話シェルをスキップします。" >&2
+  fi
 fi
 ```
 
@@ -216,7 +224,7 @@ fi
 
 ```zsh
 cd /path/to/existing/project
-zsh /path/to/existing-project.zsh
+zsh /path/to/existing-project-type.zsh
 ```
 
 - git 未管理なら `git init -b main` から自動で始まる。
@@ -226,5 +234,5 @@ zsh /path/to/existing-project.zsh
 ### 対話シェルを開きたくない場合
 
 ```zsh
-NEW_PROJECT_TYPE_NO_SHELL=1 zsh /path/to/existing-project.zsh
+NEW_PROJECT_TYPE_NO_SHELL=1 zsh /path/to/existing-project-type.zsh
 ```

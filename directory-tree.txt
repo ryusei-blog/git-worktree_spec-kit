@@ -1,10 +1,11 @@
 .
 ├── .gitignore
+├── README.md
 ├── directory-tree.txt
-├── existing-project.zsh
-├── existing-project.zsh スクリプト解説ドキュメント.md
+├── existing-project-type.zsh
+├── existing-project-type.zsh スクリプト解説ドキュメント.md
 ├── new-project-type.zsh
 ├── new-project-type.zsh スクリプト解説ドキュメント.md
 └── スクリプト実行パスまとめ.md
 
-1 directory, 7 files
+1 directory, 8 files

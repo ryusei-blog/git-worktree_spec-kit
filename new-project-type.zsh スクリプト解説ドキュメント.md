@@ -25,16 +25,16 @@ version: 1.0.0
 
 ```text
 repo-root/
-    .git/
-    .gitignore
-    worktrees/
-        main/
-            .git
-            .gitignore
-            .codex/
-            .specify/
-            ...（spec-kit が生成したファイル群）
-    README.hub.md
+  .git/
+  .gitignore
+  worktrees/
+    main/
+      .git
+      .gitignore
+      .codex/
+      .specify/
+      ...（spec-kit が生成したファイル群）
+  README.hub.md
 ```
 
 ## 全体構造とサンドボックス設計
@@ -47,12 +47,12 @@ main() {
     # 本処理…
 }
 
-( main ) || true
+( main ) || true  # サブシェル内で処理完結し、エラーがあっても親シェルは終了しないようにする
 ```
 
 - `set -euo pipefail` は **`main()` の中だけで有効**。
 - `( main )` によって **サブシェル（子プロセス）内で処理**が完結。
-- 途中でエラーが出ても `|| true` により、呼び出し元の対話シェル（親 zsh）は終了しない。
+- `|| true` により、途中でエラーが出ても呼び出し元の対話シェル（親 zsh）は終了しない。
 
 これにより、ターミナルに貼り付けて実行したり、`zsh ./new-project-type.zsh` で実行しても、**「終わったあとにプロンプトが生きている」ことが保証されます。**
 
@@ -132,21 +132,27 @@ find . -mindepth 1 -maxdepth 1 \
   以外のものをすべて削除。
 - 結果として、ルートには「ハブとして必要な最小構成」だけが残り、**アプリ本体は `worktrees/main` に完全移行**する。
 
-### 6. spec-kit（specify）環境構築
+### 6. spec-kit（specify）環境構築と初期プッシュ
 
 ```zsh
 cd worktrees/main
+echo "# ${repo}" > README.md
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force
 yes | specify init . --ai codex
+git add .
+git commit -m "chore: init specify environment"
+git push origin main
 ```
 
 - `cd worktrees/main` で実開発側のワークツリーに移動。
+- `echo "# ${repo}" > README.md` でリポジトリ名をタイトルにした README.md を作成。
 - `uv tool install` により、`specify-cli`（spec-kit）を GitHub の公式リポジトリから取得。
 - `yes | specify init . --ai codex` で対話質問をすべて肯定し、`codex` 前提の spec-kit テンプレートを一括構築。
   - `.specify/`
   - `.codex/`
   - 各種 config / spec ファイル群  
   が `worktrees/main` 配下に生成される。
+- その後、変更をコミットし、`git push origin main` で初回プッシュを行う。
 
 ## 対話シェル起動ロジック
 
@@ -154,13 +160,14 @@ yes | specify init . --ai codex
 shell_mode="${NEW_PROJECT_TYPE_SHELL_MODE:-child}"  # child|exec|none
 
 if [ "${NEW_PROJECT_TYPE_NO_SHELL:-0}" != "1" ] && [ "$shell_mode" != "none" ]; then
-    # TTY 判定と /dev/tty フォールバック
+    # まず標準入力・出力が TTY かを判定し、対話シェルを起動
     if [ -t 0 ] && [ -t 1 ]; then
         if [ "$shell_mode" = "exec" ]; then
             exec "${SHELL:-/bin/zsh}" -il
         else
             "${SHELL:-/bin/zsh}" -il || true
         fi
+    # 標準入出力が TTY でない場合は /dev/tty にフォールバックして対話シェルを起動
     elif [ -e /dev/tty ]; then
         if [ "$shell_mode" = "exec" ]; then
             exec "${SHELL:-/bin/zsh}" -il </dev/tty >/dev/tty 2>/dev/tty
@@ -186,6 +193,12 @@ fi
   - `none`
     - どのケースでもシェルを起動しない。
 
+### TTY 判定とフォールバックのポイント
+
+- 標準入力・出力が TTY ならそれを使って対話シェルを起動。
+- そうでない場合でも `/dev/tty` が存在すれば、そこを使って対話シェルを起動。
+- これにより、Codex CLI などの疑似 TTY 環境でも対話シェルを維持しやすい設計。
+
 基本運用としては、何も指定せずに `child` モードで使うのが安全。
 
 ## 想定される実行パターンまとめ
@@ -197,7 +210,7 @@ zsh /path/to/new-project-type.zsh
 ```
 
 - `~/Documents/GitHub` に新しいリポジトリができ、
-- GitHub 作成、worktree 化、spec-kit 構築まで自動で完了。
+- GitHub 作成、worktree 化、spec-kit 構築、初回プッシュまで自動で完了。
 
 ### スクリプト後に対話シェルを開きたくない場合
 
