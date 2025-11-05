@@ -2,7 +2,6 @@
 main_phase1() {
   set -euo pipefail
 
-  cd ~/Documents/GitHub
   repo="${1:-my-new-repo}" && mkdir "$repo" && cd "$repo"
 
   # --- initialize repo on main at root (no detached HEAD) ---
@@ -23,4 +22,4 @@ main_phase1() {
   echo "✅ フェーズ1完了：spec-kit構築済みのmainが作成されました。次にフェーズ2でworktreeを追加します。"
 }
 
-main_phase1 "$@"
+( main_phase1 "$@" ) || true

@@ -72,4 +72,4 @@ main() {
 }
 
 # Run inside a subshell so `set -euo pipefail` and any non-zero statuses never kill the parent interactive shell.
-( main ) || true
+( main "$@" ) || true

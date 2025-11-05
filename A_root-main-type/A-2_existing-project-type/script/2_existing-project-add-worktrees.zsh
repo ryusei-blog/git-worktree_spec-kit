@@ -14,4 +14,4 @@ main_phase2() {
   echo "✅ フェーズ②完了：worktrees/dev を作成しました。mainのspec-kitをベースに開発を開始できます。"
 }
 
-( main_phase2 ) || true
+( main_phase2 "$@" ) || true

@@ -1,7 +1,6 @@
 main() {
   set -euo pipefail
 
-  cd ~/Documents/GitHub
   repo="${1:-my-new-repo}" && mkdir "$repo" && cd "$repo"
   git init -b main
   touch .gitignore
@@ -50,4 +49,4 @@ main() {
 }  # end of main
 
 # Run inside a subshell so `set -euo pipefail` and any non-zero statuses never kill the parent interactive shell.
-( main ) || true
+( main "$@" ) || true

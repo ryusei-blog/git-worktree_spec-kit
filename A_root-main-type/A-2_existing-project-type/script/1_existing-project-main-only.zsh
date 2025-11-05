@@ -35,4 +35,4 @@ main_phase1() {
   echo "✅ フェーズ①完了：ルートmainにspec-kitを構築しました。"
 }
 
-( main_phase1 ) || true
+( main_phase1 "$@" ) || true
