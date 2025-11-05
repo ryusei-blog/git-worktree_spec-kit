@@ -140,5 +140,9 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
-# KAMUI4D除外
-.kamuiスクリプト実行まとめ.md
+# スクリプト実行パスファイル
+スクリプト実行パスまとめ.md
+
+# 保留ファイルを除外
+A_root-main-type/A-1_new-project-type/script/new-project-type（保留）.zsh
+A_root-main-type/A-2_existing-project-type/script/existing-project-type（保留）.zsh

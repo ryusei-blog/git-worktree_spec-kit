@@ -1,11 +1,31 @@
 .
 ├── .gitignore
+├── A_root-main-type
+│   ├── A-1_new-project-type
+│   │   ├── document
+│   │   └── script
+│   │       ├── 1_new-project-main-only.zsh
+│   │       ├── 2_new-project-add-worktrees.zsh
+│   │       └── new-project-type（保留）.zsh
+│   └── A-2_existing-project-type
+│       ├── document
+│       └── script
+│           ├── 1_existing-project-main-only.zsh
+│           ├── 2_existing-project-add-worktrees.zsh
+│           └── existing-project-type（保留）.zsh
+├── B_branch-main-type
+│   ├── B-1_new-project-type
+│   │   ├── document
+│   │   │   └── new-project-type.zsh スクリプト解説ドキュメント.md
+│   │   └── script
+│   │       └── new-project-type.zsh
+│   └── B-2_existing-project-type
+│       ├── document
+│       │   └── existing-project-type.zsh スクリプト解説ドキュメント.md
+│       └── script
+│           └── existing-project-type.zsh
 ├── README.md
 ├── directory-tree.txt
-├── existing-project-type.zsh
-├── existing-project-type.zsh スクリプト解説ドキュメント.md
-├── new-project-type.zsh
-├── new-project-type.zsh スクリプト解説ドキュメント.md
 └── スクリプト実行パスまとめ.md
 
-1 directory, 8 files
+15 directories, 14 files

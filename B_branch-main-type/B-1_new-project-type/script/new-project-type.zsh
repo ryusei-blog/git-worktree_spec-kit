@@ -2,7 +2,7 @@ main() {
   set -euo pipefail
 
   cd ~/Documents/GitHub
-  repo="{{repo-name}}" && mkdir "$repo" && cd "$repo"
+  repo="${1:-my-new-repo}" && mkdir "$repo" && cd "$repo"
   git init -b main
   touch .gitignore
   git add .gitignore
