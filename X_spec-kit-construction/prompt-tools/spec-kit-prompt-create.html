@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>spec-kitテンプレートプロンプト生成ツール</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f5f5;
+      --fg: #222;
+      --accent: #2563eb;
+      --border: #d1d5db;
+      --button-fg: #fff;
+      --danger: #dc2626;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111827;
+        --fg: #e5e7eb;
+        --border: #374151;
+      }
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Helvetica Neue", Arial, sans-serif;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+      box-sizing: border-box;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    form {
+      display: grid;
+      gap: 16px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--fg);
+      font-size: 14px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    @media (prefers-color-scheme: dark) {
+      textarea {
+        background: rgba(17, 24, 39, 0.8);
+      }
+    }
+    .buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      color: var(--button-fg);
+      background: var(--accent);
+    }
+    button.secondary {
+      background: #6b7280;
+    }
+    button.danger {
+      background: var(--danger);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .output-wrapper {
+      margin-top: 24px;
+    }
+    .output-wrapper textarea {
+      min-height: 240px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      line-height: 1.4;
+      white-space: pre;
+    }
+    .message {
+      margin-top: 8px;
+      font-size: 13px;
+      min-height: 18px;
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>spec-kitテンプレートプロンプト生成ツール</h1>
+    <p>以下のプレースホルダーに対応する情報を入力し、「生成」ボタンでテンプレートプロンプトを作成してください。入力を空のままにすると元の<code>{{placeholder}}</code>形式が維持されます。</p>
+
+    <div class="buttons">
+      <button type="button" id="generateTop">生成</button>
+      <button type="button" id="clearTop" class="danger">オールクリア</button>
+    </div>
+
+    <form id="placeholderForm">
+      <div>
+        <label for="PROJECT_NAME">PROJECT_NAME（プロジェクト名称）</label>
+        <textarea id="PROJECT_NAME" rows="2" placeholder="例: Next-Gen Analytics Platform"></textarea>
+      </div>
+      <div>
+        <label for="WORKTREE_PATH">WORKTREE_PATH（作業ワークツリーのパス）</label>
+        <textarea id="WORKTREE_PATH" rows="2" placeholder="例: worktrees/main"></textarea>
+      </div>
+      <div>
+        <label for="PROJECT_OBJECTIVE">PROJECT_OBJECTIVE（プロジェクト概要）</label>
+        <textarea id="PROJECT_OBJECTIVE" rows="3" placeholder="プロジェクトの目的や背景を記載"></textarea>
+      </div>
+      <div>
+        <label for="STAKEHOLDERS">STAKEHOLDERS（関係者/ステークホルダー）</label>
+        <textarea id="STAKEHOLDERS" rows="3" placeholder="例: PM, デザインチーム, セキュリティチーム"></textarea>
+      </div>
+      <div>
+        <label for="CONSTITUTION_STATUS">CONSTITUTION_STATUS（憲法の現状）</label>
+        <textarea id="CONSTITUTION_STATUS" rows="3" placeholder="例: 原則I〜IIIまで確定、セキュリティ方針はドラフト"></textarea>
+      </div>
+      <div>
+        <label for="FEATURE_KEY">FEATURE_KEY（対象featureキー）</label>
+        <textarea id="FEATURE_KEY" rows="2" placeholder="例: 001-user-auth"></textarea>
+      </div>
+      <div>
+        <label for="ADDITIONAL_DOCS">ADDITIONAL_DOCS（追加ドキュメント）</label>
+        <textarea id="ADDITIONAL_DOCS" rows="2" placeholder="例: research.md, data-model.md"></textarea>
+      </div>
+      <div>
+        <label for="CONSTITUTION_UPDATES">CONSTITUTION_UPDATES（憲法更新内容）</label>
+        <textarea id="CONSTITUTION_UPDATES" rows="3" placeholder="更新すべき原則やルールを記載"></textarea>
+      </div>
+      <div>
+        <label for="FEATURE_DESCRIPTION">FEATURE_DESCRIPTION（/speckit.specifyに渡す説明）</label>
+        <textarea id="FEATURE_DESCRIPTION" rows="3" placeholder="例: エンドユーザーがSSOでログインできるようにする"></textarea>
+      </div>
+      <div>
+        <label for="CHECKLIST_FOCUS">CHECKLIST_FOCUS（チェックリストの焦点）</label>
+        <textarea id="CHECKLIST_FOCUS" rows="3" placeholder="例: セキュリティ要件＆監査ログ"></textarea>
+      </div>
+      <div>
+        <label for="PLAN_CONTEXT">PLAN_CONTEXT（/speckit.planの追加文脈）</label>
+        <textarea id="PLAN_CONTEXT" rows="3" placeholder="例: Electron + Next.jsでMacアプリを提供、Tailwind必須"></textarea>
+      </div>
+      <div>
+        <label for="TASKS_CONTEXT">TASKS_CONTEXT（/speckit.tasksの文脈）</label>
+        <textarea id="TASKS_CONTEXT" rows="3" placeholder="例: US1=ログイン、US2=多要素、US3=監査レポート生成"></textarea>
+      </div>
+      <div>
+        <label for="STACK_DECISIONS">STACK_DECISIONS（使用スタック）</label>
+        <textarea id="STACK_DECISIONS" rows="3" placeholder="例: Electron 38, Next.js 15 App Router, Tailwind, Prisma + SQLite"></textarea>
+      </div>
+      <div>
+        <label for="NFR_REQUIREMENTS">NFR_REQUIREMENTS（非機能要件）</label>
+        <textarea id="NFR_REQUIREMENTS" rows="3" placeholder="例: 起動5秒以内、オフライン対応、p95=150ms以下"></textarea>
+      </div>
+      <div>
+        <label for="SECURITY_REQUIREMENTS">SECURITY_REQUIREMENTS（セキュリティ/コンプライアンス要件）</label>
+        <textarea id="SECURITY_REQUIREMENTS" rows="3" placeholder="例: SOC2準拠、暗号化保存、MFA必須"></textarea>
+      </div>
+      <div>
+        <label for="UX_A11Y_REQUIREMENTS">UX_A11Y_REQUIREMENTS（UX/アクセシビリティ要件）</label>
+        <textarea id="UX_A11Y_REQUIREMENTS" rows="3" placeholder="例: WCAG 2.2 AA、トラックパッド操作最適化"></textarea>
+      </div>
+      <div>
+        <label for="CUSTOM_NOTES">CUSTOM_NOTES（カスタム指示）</label>
+        <textarea id="CUSTOM_NOTES" rows="3" placeholder="Codexに伝えたい追加メモがあれば記載"></textarea>
+      </div>
+    </form>
+
+    <div class="buttons">
+      <button type="button" id="generateBottom">生成</button>
+      <button type="button" id="copyBottom" class="secondary">コピー</button>
+      <button type="button" id="clearBottom" class="danger">オールクリア</button>
+    </div>
+
+    <div class="output-wrapper">
+      <label for="output">生成結果</label>
+      <textarea id="output" readonly placeholder="ここに生成結果が表示されます"></textarea>
+      <div class="message" id="message"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const placeholders = [
+        "PROJECT_NAME",
+        "WORKTREE_PATH",
+        "PROJECT_OBJECTIVE",
+        "STAKEHOLDERS",
+        "CONSTITUTION_STATUS",
+        "FEATURE_KEY",
+        "ADDITIONAL_DOCS",
+        "CONSTITUTION_UPDATES",
+        "FEATURE_DESCRIPTION",
+        "CHECKLIST_FOCUS",
+        "PLAN_CONTEXT",
+        "TASKS_CONTEXT",
+        "STACK_DECISIONS",
+        "NFR_REQUIREMENTS",
+        "SECURITY_REQUIREMENTS",
+        "UX_A11Y_REQUIREMENTS",
+        "CUSTOM_NOTES"
+      ];
+
+      const output = document.getElementById("output");
+      const message = document.getElementById("message");
+
+      const getValueOrPlaceholder = (key) => {
+        const el = document.getElementById(key);
+        if (!el) return `{{${key}}}`;
+        const value = el.value.trim();
+        return value ? value : `{{${key}}}`;
+      };
+
+      const setMessage = (text, type = "info") => {
+        message.textContent = text;
+        switch (type) {
+          case "success":
+            message.style.color = "#16a34a";
+            break;
+          case "error":
+            message.style.color = "#dc2626";
+            break;
+          default:
+            message.style.color = "inherit";
+        }
+      };
+
+      const generate = () => {
+        const tpl = `\`\`\`md
+# ${getValueOrPlaceholder("PROJECT_NAME")} spec-kit最終化リクエスト
+
+## コンテキスト
+
+- 既にベースspec-kitは初期構築済みである。
+- 作業対象ワークツリー: ${getValueOrPlaceholder("WORKTREE_PATH")}
+- プロジェクト概要: ${getValueOrPlaceholder("PROJECT_OBJECTIVE")}
+- 関係者/ステークホルダー: ${getValueOrPlaceholder("STAKEHOLDERS")}
+
+## 参照資料
+
+- 憲法: \`.specify/memory/constitution.md\`（${getValueOrPlaceholder("CONSTITUTION_STATUS")}）
+- 仕様: \`specs/${getValueOrPlaceholder("FEATURE_KEY")}/spec.md\`
+- 計画: \`specs/${getValueOrPlaceholder("FEATURE_KEY")}/plan.md\`
+- タスク: \`specs/${getValueOrPlaceholder("FEATURE_KEY")}/tasks.md\`
+- 追加ドキュメント: ${getValueOrPlaceholder("ADDITIONAL_DOCS")}
+
+## 期待成果
+
+- ガバナンス・リスク・事前検死を反映した最新spec/plan/tasks。
+- 未実装領域を「近日追加」「準備中」等で明示。
+- 更新ファイルの\`date_modified\`と推奨コミットメッセージ案。
+
+## 実行シナリオ
+
+1. \`.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks\` を実行し、解析結果を共有。
+2. 憲法の未入力箇所を ${getValueOrPlaceholder("CONSTITUTION_UPDATES")} で更新。
+3. \`/speckit.specify "${getValueOrPlaceholder("FEATURE_DESCRIPTION")}"\` を再実行して仕様を確定。
+4. 必要に応じて \`/speckit.checklist "${getValueOrPlaceholder("CHECKLIST_FOCUS")}"\` で要件品質を検証。
+5. \`/speckit.clarify\` で \`[NEEDS CLARIFICATION]\` を解消。
+6. \`/speckit.plan "${getValueOrPlaceholder("PLAN_CONTEXT")}"\` で research/data-model/contracts/quickstart を更新。
+7. \`/speckit.tasks "${getValueOrPlaceholder("TASKS_CONTEXT")}"\` でMVP・予定機能タスクを再編。
+8. \`/speckit.analyze\` で整合性レポートを取得し、クリティカル対応策を提示。
+9. \`git status\` と主要差分、推奨テストコマンド、コミットメッセージ案を報告。
+
+## レポート必須項目
+
+- 各ステップの変更ファイルと\`date_modified\`更新状況。
+- 事前検死で判明した失敗パターンと回避策の箇条書き。
+- 未対応事項の次アクションまたは期限提案。
+
+## 技術・要件パラメータ
+
+- 使用スタック: ${getValueOrPlaceholder("STACK_DECISIONS")}
+- 非機能要件: ${getValueOrPlaceholder("NFR_REQUIREMENTS")}
+- セキュリティ/コンプライアンス: ${getValueOrPlaceholder("SECURITY_REQUIREMENTS")}
+- UX・アクセシビリティ: ${getValueOrPlaceholder("UX_A11Y_REQUIREMENTS")}
+- カスタム指示: ${getValueOrPlaceholder("CUSTOM_NOTES")}
+
+## 基本コマンド
+
+\`\`\`bash
+.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+
+# 必要に応じて手動編集を宣言する際の例:
+# 「specs/${getValueOrPlaceholder("FEATURE_KEY")}/spec.mdの<セクション>を明示的に修正」
+\`\`\`
+
+## 成果物サマリテンプレート
+
+\`\`\`text
+### 実装済み機能
+
+- ...
+
+### 予定機能（近日追加）
+
+- ...
+
+### 事前検死ログ
+
+- 失敗パターン: ...
+- 回避策: ...
+
+### 推奨コミット
+
+- メッセージ案: ...
+\`\`\``; 
+        output.value = tpl;
+        setMessage("テンプレートを生成しました。", "success");
+      };
+
+      const clearAll = () => {
+        placeholders.forEach((key) => {
+          const el = document.getElementById(key);
+          if (el) el.value = "";
+        });
+        output.value = "";
+        setMessage("すべての入力と出力をクリアしました。");
+      };
+
+      const copyOutput = async () => {
+        if (!output.value.trim()) {
+          setMessage("コピーする内容がありません。", "error");
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(output.value);
+          setMessage("生成結果をクリップボードへコピーしました。", "success");
+        } catch (err) {
+          console.error(err);
+          setMessage("コピーに失敗しました。ブラウザの権限を確認してください。", "error");
+        }
+      };
+
+      document.getElementById("generateTop").addEventListener("click", generate);
+      document.getElementById("generateBottom").addEventListener("click", generate);
+      document.getElementById("clearTop").addEventListener("click", clearAll);
+      document.getElementById("clearBottom").addEventListener("click", clearAll);
+      document.getElementById("copyBottom").addEventListener("click", copyOutput);
+    });
+  </script>
+</body>
+</html>

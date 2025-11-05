@@ -1,5 +1,4 @@
 .
-├── .gitignore
 ├── A_root-main-type
 │   ├── A-1_new-project-type
 │   │   ├── document
@@ -25,7 +24,12 @@
 │       └── script
 │           └── existing-project-type.zsh
 ├── README.md
+├── X_spec-kit-construction
+│   ├── document
+│   │   └── git worktree × spec-kit 初期環境構築_chapter-2.md
+│   └── prompt-tools
+│       └── spec-kit-prompt-create.html
 ├── directory-tree.txt
 └── スクリプト実行パスまとめ.md
 
-15 directories, 14 files
+18 directories, 15 files
